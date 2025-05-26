@@ -1,0 +1,115 @@
+---
+title: Overview
+description: "Inngest core concepts"
+---
+
+Your back end runs on promises: when an order is placed, an email goes out, when a payment clears, inventory updates. But in complex systems promises can be broken, network is unreliable, stuff happens. Inngest makes sure that despite those uncertainties, you'll be able to keep your promises.
+
+## The need for asynchronicity
+More complex workflows, more complex and distributed architecture -> need for async.  
+Async is great (why…)   
+Without the right tools and rules async can become a mess, and disorganized. (analogy of distributed/remote work)
+
+### Orchestrating asynchronicity  
+The need for discipline & the traditional async way (queues)
+Why you need queues solves part of that
+Where they fall short Comparison with kafka or rabbitMQ (table format?)
+
+Better than queues, no infra, and better DX
+
+Inngest is a [durable execution engine](https://www.inngest.com/docs/learn/how-functions-are-executed#what-is-durable-execution) that orchestrates your workflows: 
+* listens for events 
+* decides **when** your functions should run 
+* sends an HTTP request to your function's endpoint when it's time to run.
+* ensures reliability with built-in retries, state, and delivery guarantee 
+
+Inngest helps you build reliable, event-driven workflows without managing complex infrastructure so you can focus on your business logic.
+
+
+<iframe src="https://my.spline.design/plop-9nOY5yNVM5EOEYqypjL8NmZx-iyw/" frameborder="0" width="100%" height="300px"></iframe>
+
+
+## Inngest core concepts
+Inngest event-driven orchestration is built around 3 core elements: [Events](./concepts#events), [Functions](./concepts#functions-jobs), and [Steps](./concepts#steps).
+
+// Diagram of the 3 elements
+
+### Events
+Events are the **signals** that **triggers** function execution.  
+Originate from: your back end (w/ inngest SDK), cron jobs, webhooks, or even other inngest functions.
+Customizable (filter, batching,
+
+<Expandable
+title="Event example">
+```ts
+// This sends an event to Inngest.
+await inngest.send({
+    name: "storefront/cart.checkout.completed",
+    data: {...},
+});
+```
+</Expandable>
+
+
+value: 
+
+### Functions (jobs)
+Functions are Inngest's building block. The job to be done. They can be as basic or as complex as you need them to be.
+Run on your favorite infra, serverless or anything else 
+
+Fault tolerant:can throw errors or exceptions and automatically retry, resuming execution from the point of failure
+stateful:
+can persist state across function invocations and retries
+
+Fan-out (parallelize at the function level)
+
+Send events from function
+value: 
+
+### Steps
+Steps are a unit of work to be completed within your function's flow. They can be thought of as milestones in the functions execution flow.
+
+State
+This is where the magic happens
+Each step is it's own http request
+
+
+Fine-grained control over execution flow
+Steps comes with a wealth of built-in features to control the execution flow of your functions:
+
+
+#### Queue / sequence
+Steps are executed in the order they're defined, and each step can depend on the output of the previous step. This allows for complex workflows to be built with ease.
+
+
+
+#### Sleep
+Steps can be used to introduce delays in the workflow, allowing for asynchronous operations to complete before moving on to the next step.
+
+#### Schedule / cron
+Steps can be scheduled to run at a specific time or interval, allowing for periodic tasks to be executed without manual intervention.
+
+#### Parallelise
+Steps can be executed in parallel, allowing for tasks to be completed simultaneously, improving efficiency and reducing total execution time.
+
+#### Retry
+Steps can be retried if they fail, ensuring that the workflow can recover from errors and continue execution.
+
+#### Replay
+Steps can be replayed, allowing for the workflow to be re-executed from a specific point in the execution flow. This is useful for debugging and testing purposes.
+
+value: 
+
+## Inngest key benefits
+[TODO]
+
+### Flow control
+prio
+value: 
+
+### Manage/monitor
+value: 
+
+## Call to action / next steps / resources
+Now that you know the core concepts of Inngest, you can start building your own event-driven workflows.
+[TODO]
