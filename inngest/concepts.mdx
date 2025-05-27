@@ -1,115 +1,276 @@
 ---
-title: Overview
-description: "Inngest core concepts"
+title: Understanding Inngest
+description: "Event-Driven Orchestration for Modern Applications"
 ---
 
-Your back end runs on promises: when an order is placed, an email goes out, when a payment clears, inventory updates. But in complex systems promises can be broken, network is unreliable, stuff happens. Inngest makes sure that despite those uncertainties, you'll be able to keep your promises.
+Your back end runs on promises: when an order is placed, an email goes out, and when a payment clears, inventory updates. In the real world of complex systems, promises can be broken. Networks fail, services go down, APIs rate-limit you, and unexpected errors occur. Inngest ensures that despite these uncertainties, your promises are kept.
 
-## The need for asynchronicity
-More complex workflows, more complex and distributed architecture -> need for async.  
-Async is great (why…)   
-Without the right tools and rules async can become a mess, and disorganized. (analogy of distributed/remote work)
+## Async orchestration challenges
 
-### Orchestrating asynchronicity  
-The need for discipline & the traditional async way (queues)
-Why you need queues solves part of that
-Where they fall short Comparison with kafka or rabbitMQ (table format?)
+Modern applications orchestrate complex workflows across multiple services. A single user action—like placing an order—triggers dozens of operations: payment processing, inventory updates, notifications, analytics, and more. Instead of making users wait while all these complete, we process them asynchronously in the background. This improves user experience, enables better scalability, isolates failures, and optimizes resource usage.
 
-Better than queues, no infra, and better DX
-
-Inngest is a [durable execution engine](https://www.inngest.com/docs/learn/how-functions-are-executed#what-is-durable-execution) that orchestrates your workflows: 
-* listens for events 
-* decides **when** your functions should run 
-* sends an HTTP request to your function's endpoint when it's time to run.
-* ensures reliability with built-in retries, state, and delivery guarantee 
-
-Inngest helps you build reliable, event-driven workflows without managing complex infrastructure so you can focus on your business logic.
+However, asynchronous systems introduce their own challenges. Without proper tooling, they quickly become a tangled web of callbacks, error states, and lost messages. It's like coordinating a distributed team without proper communication channels—chaos ensues without the right infrastructure.
 
 
+### Queue, the traditional approach
+
+Historically, developers have relied on message queues and job processors to handle asynchronous work. While these tools serve their purpose, they come with significant overhead: infrastructure to provision and manage, complex state tracking across distributed handlers, limited visibility when things go wrong, and manual implementation of reliability patterns like retries and error handling. Your business logic gets scattered across multiple services, making it difficult to understand and maintain complete workflows.
+
+### Inngest's event-driven approach
+
+Inngest reimagines asynchronous orchestration by providing a durable execution engine that manages the complexity for you.  
+
+Here's how Inngest works at a high level:
+
+1. **Listens for events** from your application, webhooks, or scheduled triggers  
+2. **Decides which functions to run** based on your configuration  
+3. **Ensures reliable execution** with automatic retries, state management, and delivery guarantees  
+4. **Sends HTTP requests** to your function endpoints when it's time to execute
+
+This approach offers several advantages over traditional queue systems:
+
+* **Zero infrastructure**: No servers to manage, queues to provision, or workers to scale  
+* **Developer-friendly**: Write workflows as code, not configuration  
+* **Built-in reliability**: Automatic retries, state persistence, and error handling  
+* **Full observability**: See every step, retry, and state change in your workflows
+
+## Inngest's 3 pillars
+
+Inngest's power comes from three fundamental building blocks that work together to create robust, event-driven workflows: Events, Functions, and Steps.
 <iframe src="https://my.spline.design/plop-9nOY5yNVM5EOEYqypjL8NmZx-iyw/" frameborder="0" width="100%" height="300px"></iframe>
 
+### Events: Signals driving the system
 
-## Inngest core concepts
-Inngest event-driven orchestration is built around 3 core elements: [Events](./concepts#events), [Functions](./concepts#functions-jobs), and [Steps](./concepts#steps).
+Events are the heartbeat of Inngest. They represent things that happen in your system—a user signs up, a payment processes, an API call completes, or a scheduled time arrives. But events in Inngest are more than just triggers; they're the foundation of a truly reactive system.
 
-// Diagram of the 3 elements
+**Event Sources and Flexibility**
 
-### Events
-Events are the **signals** that **triggers** function execution.  
-Originate from: your back end (w/ inngest SDK), cron jobs, webhooks, or even other inngest functions.
-Customizable (filter, batching,
+Events can originate from multiple sources, giving you flexibility in how you integrate Inngest into your architecture:
 
-<Expandable
-title="Event example">
+* **Your application**: Send events using the Inngest SDK whenever important actions occur. This is the most common pattern—your application code sends events at key moments in your business logic. 
 ```ts
 // This sends an event to Inngest.
 await inngest.send({
-    name: "storefront/cart.checkout.completed",
-    data: {...},
+  name: "storefront/cart.checkout.completed",
+  data: {...},
 });
+``` 
+* **Webhooks**: Receive events directly from external services like Stripe, GitHub, Shopify, or any service that supports webhooks. Inngest can ingest these webhooks and transform them into events your functions can process.  
+* **Scheduled triggers**: Create cron-like schedules for recurring tasks. These generate events at specified intervals, perfect for daily reports, cleanup tasks, or periodic synchronization.  
+* **Other Inngest functions**: Functions can emit events, creating powerful workflow chains and enabling complex orchestration patterns.
+
+**Advanced Event Patterns**
+
+Inngest's event system supports sophisticated patterns that go beyond pub-sub:
+
+* **Event filtering**: Functions can subscribe to events based on complex criteria, not just event names. Filter by data attributes, user properties, or custom logic.  
+* **Event batching**: Collect multiple related events and process them together for efficiency. Perfect for aggregating metrics or bulk operations.  
+* **Event transformation**: Modify or enrich events as they flow through your system, adding context or normalizing data formats.  
+* **Event replay**: Reprocess historical events for debugging, testing, or recovering from errors.
+
+The power of Inngest's event system lies in its ability to create a unified event stream across your entire application ecosystem. Whether events come from your monolith, microservices, third-party webhooks, or scheduled tasks, they all flow through the same reliable pipeline.
+
+Learn more about [Events & Triggers](https://www.inngest.com/docs/features/events-triggers).
+
+### Functions: Where your logic lives
+
+Functions are Inngest's primary building blocks—the jobs to be done. They define what happens when events occur. But unlike traditional event handlers or queue workers, Inngest functions are designed from the ground up for complex, multi-step workflows that can span minutes, hours, or even days.
+
+**Execution Model**
+
+Inngest functions operate on a unique execution model that sets them apart from traditional approaches:
+
+**Durable execution**: Functions can pause, resume, and restart without losing progress. This durability means a function can wait for hours for an external event, and if your server restarts during that time, the function resumes exactly where it left off.
+
+**Transactional steps**: Each step within a function executes as an independent transaction. When a step completes successfully, its result is permanently stored. This means retries never re-execute successful steps, preventing duplicate side effects.
+
+**Distributed by design**: Functions don't need to run on a single server or even in a single execution. Inngest can distribute function execution across your infrastructure, calling different steps on different servers as needed.
+
+**Event-driven lifecycle**: Functions can be triggered by events, wait for events during execution, and emit events to trigger other functions. This creates a fully reactive system where complex behaviors emerge from basic rules.
+
+**Advanced Function Capabilities**
+
+Beyond basic execution, Inngest functions support sophisticated patterns:
+
+**Dynamic branching**: Functions can make decisions based on event data, step results, or external conditions. Create if-then logic, switch statements, or even dynamic loops within your workflows.
+
+**Sub-workflows**: Functions can invoke other functions, creating modular, reusable components. Build a library of common operations and compose them into complex workflows.
+
+**Long-running workflows**: Functions can run for extended periods, perfect for approval workflows, scheduled follow-ups, or monitoring tasks. The durable execution model ensures they survive infrastructure changes.
+
+**Parallel execution patterns**: Fan out to process multiple items concurrently, then fan in to aggregate results. Control concurrency at both the function and step level.
+
+**Error boundaries**: Define error handling strategies at multiple levels—retry individual steps, compensate for failures, or escalate to human intervention.
+
+The beauty of Inngest functions is that all this power comes without complexity. You write straightforward code, and Inngest handles the distributed systems challenges behind the scenes.
+```ts Function 
+export default inngest.createFunction(
+  { id: "activation-email" },
+  { event: "app/user.created" },
+  async ({ event, step }) => {
+    await step.run("send-welcome-email", async () => {
+      return await sendEmail({ 
+          email: event.user.email, 
+          template: "welcome" 
+        });
+    });
+  }
+);
 ```
-</Expandable>
 
+### **Steps: Reliable Units of Work**
 
-value: 
+Steps are the secret to Inngest's reliability and power. Each step represents a discrete unit of work within your function—a checkpoint that Inngest can retry independently. But steps are more than just retry boundaries; they're building blocks for sophisticated workflow patterns.
 
-### Functions (jobs)
-Functions are Inngest's building block. The job to be done. They can be as basic or as complex as you need them to be.
-Run on your favorite infra, serverless or anything else 
+**The Step Execution Model**
 
-Fault tolerant:can throw errors or exceptions and automatically retry, resuming execution from the point of failure
-stateful:
-can persist state across function invocations and retries
+When a function runs, Inngest doesn't execute all your code at once. Instead, it intelligently breaks execution at step boundaries:
 
-Fan-out (parallelize at the function level)
+1. **First run**: Execute until the first step, run the step, save its output  
+2. **Subsequent runs**: Skip completed steps (using saved outputs), execute the next step  
+3. **On failure**: Retry only the failed step, not the entire function  
+4. **On success**: Continue to the next step or complete the function
 
-Send events from function
-value: 
+This model provides powerful guarantees:
 
-### Steps
-Steps are a unit of work to be completed within your function's flow. They can be thought of as milestones in the functions execution flow.
+* **No duplicate work**: Successful steps never re-execute, even after failures  
+* **Consistent state**: Each step sees the same inputs on every retry  
+* **Efficient resource usage**: Only run the code that needs to run  
+* **Clear debugging**: Know exactly which step failed and why
 
-State
-This is where the magic happens
-Each step is it's own http request
+**Types of Steps**
 
+Inngest provides several step types, each designed for specific workflow patterns:
 
-Fine-grained control over execution flow
-Steps comes with a wealth of built-in features to control the execution flow of your functions:
+**Run steps**: Execute your business logic with automatic retries and state persistence. These are your workhorses—API calls, database operations, or any computation that might fail and need retrying.
 
+**Sleep steps**: Pause execution for a specified duration. Unlike traditional sleep calls, these don't block resources. Your function literally stops executing and resumes later, perfect for:
 
-#### Queue / sequence
-Steps are executed in the order they're defined, and each step can depend on the output of the previous step. This allows for complex workflows to be built with ease.
+* Waiting for external systems to process  
+* Implementing polling with backoff  
+* Scheduling follow-up actions  
+* Rate limiting operations
 
+**Wait for event steps**: Pause execution until a specific event arrives. This enables powerful patterns like:
 
+* Human approval workflows  
+* Coordinating between multiple systems  
+* Implementing saga patterns  
+* Building reactive state machines
 
-#### Sleep
-Steps can be used to introduce delays in the workflow, allowing for asynchronous operations to complete before moving on to the next step.
+**Send event steps**: Emit events to trigger other functions or notify external systems. These maintain Inngest's delivery guarantees, ensuring events are sent exactly once.
 
-#### Schedule / cron
-Steps can be scheduled to run at a specific time or interval, allowing for periodic tasks to be executed without manual intervention.
+**Invoke function steps**: Call other Inngest functions and wait for their completion. This enables modular workflow design and code reuse.
 
-#### Parallelise
-Steps can be executed in parallel, allowing for tasks to be completed simultaneously, improving efficiency and reducing total execution time.
+**Advanced Step Patterns**
 
-#### Retry
-Steps can be retried if they fail, ensuring that the workflow can recover from errors and continue execution.
+Steps can be combined in sophisticated ways to implement complex patterns:
 
-#### Replay
-Steps can be replayed, allowing for the workflow to be re-executed from a specific point in the execution flow. This is useful for debugging and testing purposes.
+**Parallel execution**: Run multiple steps concurrently, with automatic fan-in to collect results. Control concurrency limits to prevent overwhelming downstream services.
 
-value: 
+**Conditional execution**: Skip or execute steps based on previous results or event data. Build dynamic workflows that adapt to runtime conditions.
 
-## Inngest key benefits
-[TODO]
+**Loops and iteration**: Process arrays of data with parallel or sequential execution. Implement map-reduce patterns or batch processing workflows.
 
-### Flow control
-prio
-value: 
+**Compensation logic**: Define rollback steps that execute when later steps fail. Implement the saga pattern for distributed transactions.
 
-### Manage/monitor
-value: 
+**State Management Within Steps**
 
-## Call to action / next steps / resources
-Now that you know the core concepts of Inngest, you can start building your own event-driven workflows.
-[TODO]
+Each step has access to:
+
+* **Event data**: The original triggering event  
+* **Previous step outputs**: Results from all previously executed steps  
+* **Function state**: Accumulated state across the entire function execution  
+* **External state**: Ability to read/write to your databases or services
+
+This rich context enables steps to make intelligent decisions while maintaining simplicity in your code.
+
+The step model is what transforms Inngest from a basic job queue into a powerful workflow engine. By breaking complex operations into discrete, retryable units, you get reliability without complexity.
+
+<Tabs>
+  <Tab title="Queue" default>
+    Executed in the order they're defined, with each step able to depend on the previous step's output. This enables complex workflows built with ease.  
+    ![queue](/images/queue.svg)  
+    Example: Sending an event from a step  
+    ```ts 
+      await inngest.send({
+        name: "storefront/cart.checkout.completed",
+        data: {...},
+      });
+    ```
+  </Tab>
+  <Tab title="Sleep">
+    Introduce delays to wait for asynchronous operations before moving on.  
+    ![sleep](/images/hero-dark.png)
+  </Tab>
+  <Tab title="Schedule">
+    Run at specific times or intervals for periodic tasks.  
+    ![schedule](/images/checks-passed.png)
+  </Tab>
+  <Tab title="Parallelize">
+    Run steps in parallel for efficiency and reduced total execution time.  
+    ![parallelize](/images/checks-passed.png)
+  </Tab>
+  <Tab title="Retry">
+    Automatically retry failed steps to recover from errors.  
+    ![retry](/images/checks-passed.png)
+  </Tab>
+  <Tab title="Replay">
+    Re-execute workflows from specific points for debugging and testing.  
+    ![replay](/images/checks-passed.png)
+  </Tab>
+</Tabs>
+
+## All about Developer Experience
+
+### Manage your workflows
+
+Inngest gives you powerful tools to manage your workflows at scale:
+
+- **Environments**: Isolate development, staging, and production workflows. Safely test changes without impacting live traffic.
+- **Function replay**: Instantly re-run functions from any event or step for debugging, testing, or recovery—no manual data setup required.
+- **Function pausing**: Temporarily pause function execution for maintenance or incident response, then resume with no data loss.
+- **Bulk cancellation**: Cancel many running or scheduled function executions at once, enabling efficient responses to incidents or streamlined rollbacks of changes.
+
+### Keep the pulse of your workflows
+
+Inngest provides built-in observability so you always know what's happening:
+
+- **Real-time dashboards**: Track function executions, step outcomes, and event flows as they happen.
+- **Detailed logs**: View logs for every function run and step, making debugging straightforward.
+- **Performance metrics**: Monitor execution times, error rates, retries, and throughput to optimize your workflows.
+- **Alerting**: Set up alerts for failures, high latency, or unusual patterns to catch issues early.
+
+With these management and monitoring features, you can confidently operate complex workflows and quickly respond to any issue.
+
+### Better Developer experience
+
+Inngest offers a seamless developer experience with intuitive APIs, zero setup infrastructure, and powerful debugging tools, enabling you to build and maintain workflows efficiently.
+
+## Message queues vs Inngest
+Inngest provides a modern alternative to traditional message queues like Kafka or RabbitMQ, focusing on event-driven orchestration with built-in reliability and state management. Here's how Inngest compares to conventional message queues:
+
+| Feature            | Message Queues                | Inngest                                         |
+|--------------------|-------------------------------------------------|-------------------------------------------------|
+| Event-driven       | <Icon icon="check" iconType="solid" /> Yes      | <Icon icon="check" iconType="solid" /> Yes      |
+| Durable execution  | <Icon icon="check" iconType="solid" /> Yes      | <Icon icon="check" iconType="solid" /> Yes      |
+| State management   | <Icon icon="xmark" iconType="solid" color="red" /> No | <Icon icon="check" iconType="solid" /> Yes      |
+| Built-in retries   | <Icon icon="check" iconType="solid" /> Basic    | <Icon icon="check" iconType="solid" /> Advanced |
+| Delivery guarantee | <Icon icon="triangle-exclamation" iconType="solid" color="orange" /> Varies | <Icon icon="check" iconType="solid" /> Yes      |
+| Flow control       | <Icon icon="xmark" iconType="solid" color="red" /> Manual | <Icon icon="check" iconType="solid" /> Built-in |
+| Monitoring         | <Icon icon="triangle-exclamation" iconType="solid" color="orange" /> External | <Icon icon="check" iconType="solid" /> Built-in |
+| Developer Experience | <Icon icon="triangle-exclamation" iconType="solid" color="orange" /> Moderate | <Icon icon="check" iconType="solid" /> Excellent |
+| Complexity        | <Icon icon="xmark" iconType="solid" color="red" /> High | <Icon icon="check" iconType="solid" /> Low      |
+| Infrastructure   | <Icon icon="xmark" iconType="solid" color="red" /> Requires setup | <Icon icon="check" iconType="solid"/> Zero setup |
+
+## Ready to build?
+
+You've got the basics—now it's time to build. Check out [getting started](https://www.inngest.com/docs/getting-started/nextjs-quick-start) or jump into the API reference.
+
+### Next Steps and Resources
+
+* [**Interactive tutorial**](https://): Build a complete order processing workflow  
+* [**Architecture guide**](https://): Deep dive into how Inngest works under the hood  
+* [**Migration guide**](https://): Move existing queue-based workflows to Inngest  
+* [**API reference**](https://): Complete documentation of all Inngest features
+

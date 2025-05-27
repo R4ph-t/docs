@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "palm",
   "name": "Raph Docs",
   "colors": {
     "primary": "#16A34A",
@@ -9,35 +9,19 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "tabs": [
+    "groups": [
       {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Inngest",
-            "pages": [
-              "inngest/concepts"
-            ]
-          },
-          {
-            "group": "Get Started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Essentials",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
-            ]
-          }
+        "group": "HOME",
+        "pages": [
+          "inngest/concepts",
+          "inngest/concepts_8"
+        ]
+      },
+      {
+        "group": "QUICK START",
+        "pages": [
+          "quickstart",
+          "development"
         ]
       }
     ]
