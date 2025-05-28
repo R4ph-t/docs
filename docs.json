@@ -16,13 +16,6 @@
           "inngest/notes",
           "inngest/concepts"
         ]
-      },
-      {
-        "group": "QUICK START",
-        "pages": [
-          "quickstart",
-          "development"
-        ]
       }
     ]
   },

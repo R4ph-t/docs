@@ -3,28 +3,18 @@ title: 5 minutes to Inngest
 description: "Understand Inngest key concepts and benefits"
 ---
 
-Building reliable async workflows is tough. Users expect instant results, but your back end is juggling payments, emails, inventory updates, and more—all while networks fail and APIs flake out. One missed step can mean lost revenue or a bad user experience. Inngest makes sure nothing slips through the cracks.
+Modern apps rely on background processing to deliver great user experiences. When someone places an order, your system handles payments, updates inventory, sends emails, and tracks analytics—all without making the user wait. But building reliable async workflows is tough. Networks fail, APIs flake out, and one missed step can mean lost revenue or frustrated users.
+
+Traditional solutions like message queues and job processors work, but they're hard to use. You need to set up servers, manage queues, track state across services, and build your own retry logic. It's like trying to coordinate your body's functions manually—imagine having to consciously manage your heartbeat, breathing, and digestion all at once.
 
 > [1 min concept video here]
 
-## Async orchestration
+## Inngest's event-driven approach
 
-Modern apps rely on background processing to deliver a great user experience. When someone places an order, your system handles payments, updates inventory, sends emails, and tracks analytics—all without making the user wait. Asynchronous workflows keep your app fast and responsive, even as complexity grows.
 
-The downside? Async systems are hard to build right. Without the right tools, you end up with a mess of callbacks, lost messages, and mystery failures. It's like managing a remote team without Slack—chaos without the right tools.
-
-Developers traditionally rely on message queues and job processors for async work. These tools work, but they're hard to use. You need to set up servers, manage queues, track state across services, and build your own retry logic. And when things eventually break, you're on your own.
-
-### Inngest's event-driven approach
-
-Inngest rethinks async work by managing the hard parts for you. You focus on your workflow logic. Inngest handles the complexity and the infrastructure.
-
-What Inngest does:
-
-1. **Listens for events** from your app, webhooks, or schedules
-2. **Decides which functions to run** based on your rules
-3. **Calls your code** via HTTP when it's time to run
-4. **Makes sure functions complete** with retries and state tracking
+Inngest rethinks async work by managing the hard parts for you. You focus on your workflow logic. Inngest handles the complexity and the infrastructure.  
+**Inngest listens for events** from your app, webhooks, or schedules. It **decides which functions to run** based on your rules.
+It then **calls your code** via HTTP when it's time to run and finally **makes sure functions complete** with retries and state tracking.
 
 ```mermaid
 flowchart LR
@@ -46,24 +36,24 @@ flowchart LR
   class B platform
 ```
 
-This approach offers several core benefits: **no infrastructure to manage** (servers, queues, or workers), **built-in reliability** (retries, state management, error handling), **comprehensive debugging** capabilities visibility into every step, retry, and state change.
+This approach brings many benefits. You're **freed from the hassle managing infrastructure**, no servers, queues, or workers to set up. **Reliability is built-in** with automatic retries, state management, and error handling. Finally, you **gain full visibility into your workflows execution**, allowing you to debug every step, retry, and state change with ease.
 
-Before we explore the key concepts that make this approach possible, let's take a quick step back and use an analogy to understand why Inngest is so powerful.
+Before exploring the key concepts making this approach possible, time to use our brain (as an analogy) and understand what makes Inngest so powerful.
 
 ### Your app's subconscious
 
 Think of your brain: it handles most tasks in the background without you thinking about it—regulating your heartbeat, controlling digestion, or reacting instantly to danger. It processes countless signals from your body and the world, automatically triggering the right actions at the right time. 
 
-Your app has a similar need: it must respond to events (a user signs up, an order is placed) and trigger the right logic (send an email, update a database, process a payment) without manual intervention. 
+Your app has a similar need: it must respond to events (`user.signup`) and trigger the right logic (`sendMail()`) without manual intervention. 
 
-Just like your brain ensures you keep breathing while you focus on other important tasks, Inngest ensures your app's background work happens reliably—without you having to worry about state, retries, or orchestration.  
+Just like your brain ensures you keep breathing while you focus on other important tasks, Inngest ensures your app's background work happens reliably. Freeing you from worrying about state, retries, or orchestration.  
 
-Inngest is like the subconscious for your app: quietly handling the critical work so your core systems stay responsive, your logic stays clean, and your user experience stays smooth.
+Inngest is like your app's subconscious. It handles the critical work in the background so your core systems stay responsive.
 
 
-## Inngest's 3 key pillars
+## Inngest's three key pillars
 
-Inngest uses three building blocks that work together to create reliable workflows: [Events](#events%3A-things-that-happen), [Functions](#functions%3A-your-workflow-logic), and [Steps](#steps%3A-reliable-units-of-work).
+Inngest uses three core building blocks that work together to create reliable workflows: [Events](#events%3A-things-that-happen), [Functions](#functions%3A-your-workflow-logic), and [Steps](#steps%3A-reliable-units-of-work).
 
 ### Events: Things that happen
 
@@ -82,16 +72,12 @@ const event = {
 };
 ```
 
-**Originate from many places:**
+**Events can come from many places.** **Your app**, can send events using the Inngest SDK when important things happen. **Webhooks**, to receive events from services like Stripe, GitHub, or Shopify. **Schedules** can run events on a schedule, like cron jobs. **Other functions** to chain workflows by having functions send events.
 
-- **Your app**: Send events using the Inngest SDK when important things happen
-- **Webhooks**: Get events from services like Stripe, GitHub, or Shopify
-- **Schedules**: Run events on a schedule, like cron jobs
-- **Other functions**: Chain workflows by having functions send events
+**Events are handy to manipulate.** **Filter** them to only run functions when events match certain rules, **batch** similar events to process them together, or **transform** them by changing or adding data as they flow through.
 
-Events are handy to manipulate. **Filter** them to only run functions when events match certain rules, **batch** similar events to process them together, or **transform** them by changing or adding data as they flow through.
+Events create a single stream of activity across your whole system. Whether from your main app, microservices, webhooks, or schedules, all events flow through the same reliable pipeline. [Learn more about events](https://www.inngest.com/docs/features/events-triggers).
 
-Events create a single stream of activity across your whole system. Whether from your main app, microservices, webhooks, or schedules, all events flow through the same reliable pipeline.
 
 ### Functions: Your workflow logic
 
@@ -128,13 +114,15 @@ Functions support powerful patterns:
 - **Run in parallel**: Process many items at once. Control how many run together.  
 - **Handle errors smartly**: Retry steps, compensate for failures, or alert humans when needed.  
 
+[Learn more about functions](https://www.inngest.com/docs/features/inngest-functions).
+
 ### Steps: Reliable Units of work
 
-Steps are what make Inngest special. Each step is a unit of work that can retry on its own. But steps do more than just retry—they're how you build complex workflows.
+Steps are what make Inngest so powerful. Each step is a unit of work that can retry on its own. But steps do more than just retry—they're how you build complex workflows.
 
-Each step is like a task your brain handles: **Get Up**: Can't happen twice—if you already got up, you don't repeat it. **Make Coffee**: If it fails (the machine jams), you'll retry until it works. **Check Weather** → **Pick Outfit**: Steps can depend on each other's results.
+Each step is like a task your brain has in store for you in your morning routine: **Get Up**, **Make Coffee**, **Check Weather** → **Pick Outfit**.
 
-Inngest automatically isolates each step, retries failures, and ensures successful steps don't rerun.
+Inngest automatically isolates each step, retries upon failures, and ensures successful steps aren't rerun.
 
 ```ts morning.ts 
 export const morningRoutine = inngest.createFunction(
@@ -168,11 +156,11 @@ export const morningRoutine = inngest.createFunction(
 );
 ```
 
-**How steps work**
+#### How steps work
 
 Inngest runs your function step by step:
 
-1. **First run**: Run until the first step, execute it, save the result
+1. **First run**: Run the first step, execute it, save the result
 2. **On failure**: Retry only the failed step
 3. **On success**: Move to the next step or finish
 4. **Next runs**: Skip finished steps, use saved result and run the next one
@@ -225,8 +213,6 @@ flowchart LR
   class H save
 ```
 
-
-
 This approach ensures no wasted work as successful steps never run twice. Steps consistently receive the same inputs on retries, leading to efficient runs where only necessary actions are executed. This also provides clear debugging, pinpointing exactly what failed and why.
 
 **Step context**
@@ -234,7 +220,7 @@ This approach ensures no wasted work as successful steps never run twice. Steps 
 Each step can access the triggering event, results from previous steps, shared function state, and your databases and APIs.
 Steps have the context they need to make smart decisions while keeping your code clean and maintainable.
 
-**Types of steps**
+#### Step types and patterns
 
 Inngest provides multiple step types:
 
@@ -417,8 +403,8 @@ flowchart LR
   </Tab>
 </Tabs>
 
+Steps transform Inngest from a job queue into a workflow engine. By breaking work into retryable units, you get reliability without complexity. [Learn more about steps](https://www.inngest.com/docs/features/inngest-functions/steps-workflows).
 
-Steps transform Inngest from a job queue into a workflow engine. By breaking work into retryable units, you get reliability without complexity.
 
 ## It's all about developer experience
 
@@ -453,7 +439,7 @@ Assign priorities to different workflows or events, so urgent work is processed 
 
 Inngest makes it straightforward to configure these controls in code or via the dashboard, so you can adapt to changing business needs without rewriting your workflows.
 
-### Observe and manage
+### Observe, manage
 
 Know exactly what's happening in your workflows, and stay in control:
 
