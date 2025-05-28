@@ -3,18 +3,18 @@ title: 5 minutes to Inngest
 description: "Understand Inngest key concepts and benefits"
 ---
 
-Modern apps rely on background processing to deliver great user experiences. When someone places an order, your system handles payments, updates inventory, sends emails, and tracks analytics—all without making the user wait. But building reliable async workflows is tough. Networks fail, APIs flake out, and one missed step can mean lost revenue or frustrated users.
+Modern apps rely on background processing to deliver great user experiences. When someone places an order, your system handles payments, updates inventory, sends emails, and tracks analytics—all without making the user wait. The issue is that building reliable async workflows is tough. Networks fail, APIs flake out, and one missed step can mean lost revenue or frustrated users.
 
-Traditional solutions like message queues and job processors work, but they're hard to use. You need to set up servers, manage queues, track state across services, and build your own retry logic. It's like trying to coordinate your body's functions manually—imagine having to consciously manage your heartbeat, breathing, and digestion all at once.
+Traditional solutions like message queues and job processors are battle-tested technologies, but they're hard to use. You need to set up servers, manage queues, track state across services, and build your own retry logic. The good news is, there's another way.
 
-> [1 min concept video here]
+> [great spot for a 1 min concept video]
 
 ## Inngest's event-driven approach
 
 
 Inngest rethinks async work by managing the hard parts for you. You focus on your workflow logic. Inngest handles the complexity and the infrastructure.  
 **Inngest listens for events** from your app, webhooks, or schedules. It **decides which functions to run** based on your rules.
-It then **calls your code** via HTTP when it's time to run and finally **makes sure functions complete** with retries and state tracking.
+It then **calls your code** (through HTTP requests) when it's time to run, and finally **makes sure functions complete** with retries and state tracking.
 
 ```mermaid
 flowchart LR
@@ -36,9 +36,9 @@ flowchart LR
   class B platform
 ```
 
-This approach brings many benefits. You're **freed from the hassle managing infrastructure**, no servers, queues, or workers to set up. **Reliability is built-in** with automatic retries, state management, and error handling. Finally, you **gain full visibility into your workflows execution**, allowing you to debug every step, retry, and state change with ease.
+This approach brings many benefits. You're **freed from the hassle of managing infrastructure**, no servers, queues, or workers to set up. **Reliability is built-in** with automatic retries, state management, and error handling. Finally, you **gain full visibility into your workflow execution**, allowing you to debug every step, retry, and state change with ease.
 
-Before exploring the key concepts making this approach possible, time to use our brain (as an analogy) and understand what makes Inngest so powerful.
+Before exploring the key concepts that are making this approach possible, it's time to use our brain (as an analogy) to understand what makes Inngest so neat, and more importantly what it'll empower you to do.
 
 ### Your app's subconscious
 
@@ -72,9 +72,11 @@ const event = {
 };
 ```
 
-**Events can come from many places.** **Your app**, can send events using the Inngest SDK when important things happen. **Webhooks**, to receive events from services like Stripe, GitHub, or Shopify. **Schedules** can run events on a schedule, like cron jobs. **Other functions** to chain workflows by having functions send events.
+**Events come from many places.**   
+**Your app** can send events using the Inngest SDK when important things happen. **Webhooks**, to receive events from services like Stripe, GitHub, or Shopify. **Schedules** can trigger events on a schedule, like cron jobs. **Other functions** to chain workflows by having functions send events.
 
-**Events are handy to manipulate.** **Filter** them to only run functions when events match certain rules, **batch** similar events to process them together, or **transform** them by changing or adding data as they flow through.
+**Events are handy to manipulate.**   
+**Filter** them to only run functions when events match certain rules, **batch** similar events to process them together, or **transform** them by changing or adding data as they flow through.
 
 Events create a single stream of activity across your whole system. Whether from your main app, microservices, webhooks, or schedules, all events flow through the same reliable pipeline. [Learn more about events](https://www.inngest.com/docs/features/events-triggers).
 
@@ -156,7 +158,7 @@ export const morningRoutine = inngest.createFunction(
 );
 ```
 
-#### How steps work
+#### Step execution flow 
 
 Inngest runs your function step by step:
 
@@ -164,54 +166,6 @@ Inngest runs your function step by step:
 2. **On failure**: Retry only the failed step
 3. **On success**: Move to the next step or finish
 4. **Next runs**: Skip finished steps, use saved result and run the next one
-
-
-**First run** - executes and saves each step:
-```mermaid azdad
-flowchart LR
-  A[Start] --> B[Execute Step 1]
-  B -->|✅| C[💾 Save Result]
-  B -->|❌| D[🔄 Retry]
-  D --> B
-  C --> E[Execute Step 2]
-  E -->|✅| F[💾 Save Result]
-  E -->|❌| G[🔄 Retry]
-  G --> E
-  F --> H[Complete]
-  
-  classDef execute fill:#22c55e,stroke:#16a34a,color:#fff
-  classDef retry fill:#ef4444,stroke:#dc2626,color:#fff
-  classDef save fill:#6366f1,stroke:#4338ca,color:#fff
-  
-  class B,E execute
-  class D,G retry
-  class C,F save
-```
-
-**Next run** - skips completed steps, uses saved results:
-```mermaid
-flowchart LR
-  A[Start] --> B{Step 1 Done?}
-  B -->|✅ YES| C[📤 Use Saved Result]
-  C --> D{Step 2 Done?}
-  D -->|✅ YES| E[📤 Use Saved Result]
-  E --> F[Complete]
-  D -->|❌ NO| G[Execute Step 2]
-  G -->|✅| H[💾 Save Result]
-  G -->|❌| I[🔄 Retry]
-  I --> G
-  H --> F
-  
-  classDef skip fill:#94a3b8,stroke:#64748b,color:#fff
-  classDef execute fill:#22c55e,stroke:#16a34a,color:#fff
-  classDef retry fill:#ef4444,stroke:#dc2626,color:#fff
-  classDef save fill:#6366f1,stroke:#4338ca,color:#fff
-  
-  class C,E skip
-  class G execute
-  class I retry
-  class H save
-```
 
 This approach ensures no wasted work as successful steps never run twice. Steps consistently receive the same inputs on retries, leading to efficient runs where only necessary actions are executed. This also provides clear debugging, pinpointing exactly what failed and why.
 
@@ -270,12 +224,7 @@ flowchart LR
     ```
   </Tab>
   <Tab title="Sleep">
-    Pause without blocking resources. Your function stops and restarts later. Great for:
-    - Waiting for other systems
-    - Adding delays between retries
-    - Scheduling future work
-    - Rate limiting  
-
+    Pause without blocking resources. Your function stops and restarts later.
     ```mermaid
 flowchart LR
   A[Step 1] --> B[Step 2: Sleep]-.->|💤 Function sleeps\n5 min| D[Step 3] -.-> F[Step N]
@@ -408,6 +357,8 @@ Steps transform Inngest from a job queue into a workflow engine. By breaking wor
 
 ## It's all about developer experience
 
+Those three pillars are the foundation of Inngest, but what makes it truly powerful is the developer experience. Inngest is designed to get you up and running, **fast**.
+
 ### Build with great tools
 
 Inngest gives you a complete toolkit for building and running workflows:
@@ -455,7 +406,7 @@ You get built-in visibility and tools to manage every aspect of your async work�
 
 
 ## Recap: Inngest vs the rest
-Inngest provides a modern alternative to traditional message queues like Kafka or RabbitMQ, focusing on event-driven orchestration with built-in reliability and state management. Here's how Inngest compares to conventional message queues:
+Inngest provides a modern alternative to traditional message queues like Kafka or RabbitMQ, focusing on event-driven orchestration with built-in reliability and state management. Here's how Inngest compares to the alternative options:
 
 | Feature            | Message queues                | Temporal                                      | Inngest                                         |
 |--------------------|------------------------------|-----------------------------------------------|-------------------------------------------------|
@@ -472,11 +423,12 @@ Inngest provides a modern alternative to traditional message queues like Kafka o
 
 ## Now, it's your turn to build
 
-Ready to build better async workflows? Install the SDK for your language, create your first function, and explore our examples and best practices.
+Ready to build better async workflows? Here is where you should go next:
 
+- [**quickstart guide**](https://www.inngest.com/docs/getting-started/nextjs-quick-start): add Inngest to a Next.js app and build a complex workflows in minutes.
 - **Interactive tutorial**: Build a complete order processing workflow
-- **Architecture guide**: Learn how Inngest works under the hood
 - **Migration guide**: Move existing queue workflows to Inngest
-- **API reference**: Complete documentation of all features
+- [**Check the API reference**](https://api-docs.inngest.com/docs/inngest-api/1j9i5603g5768-introduction): Complete documentation of all features
+- [**Deploy to prod**](https://www.inngest.com/docs/platform/deployment): Learn how Inngest works under the hood
 
 Inngest changes how we build async, event-driven apps. Start building more reliable workflows today—your future self will thank you.
